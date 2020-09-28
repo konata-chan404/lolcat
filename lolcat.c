@@ -13,19 +13,17 @@
  * 0. You just DO WHAT THE FUCK YOU WANT TO.
  */
 
-#define _XOPEN_SOURCE
+#include "wcwidth.h"
 
+#include <windows.h>
 #include <ctype.h>
-#include <err.h>
 #include <errno.h>
 #include <locale.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/time.h>
-#include <unistd.h>
-#include <wchar.h>
+#include <stdlib.h>
 #include <time.h>
 
 static char helpstr[] = "\n"
@@ -47,9 +45,9 @@ static char helpstr[] = "\n"
                         "  lolcat            Copy standard input to standard output.\n"
                         "  fortune | lolcat  Display a rainbow cookie.\n"
                         "\n"
-                        "Report lolcat bugs to <https://github.com/jaseg/lolcat/issues>\n"
-                        "lolcat home page: <https://github.com/jaseg/lolcat/>\n"
-                        "Original idea: <https://github.com/busyloop/lolcat/>\n";
+
+                        "!! Original C implementation: <https://github.com/jaseg/lolcat/> !!\n"
+                        "!! Original idea: <https://github.com/busyloop/lolcat/>          !!\n";
 
 #define ARRAY_SIZE(foo) (sizeof(foo) / sizeof(foo[0]))
 const unsigned char codes[] = { 39, 38, 44, 43, 49, 48, 84, 83, 119, 118, 154, 148, 184, 178, 214, 208, 209, 203, 204, 198, 199, 163, 164, 128, 129, 93, 99, 63, 69, 33 };
@@ -91,17 +89,31 @@ static wint_t helpstr_hack(FILE * _ignored)
 
 int main(int argc, char** argv)
 {
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD dwMode = 0;
+    GetConsoleMode(hOut, &dwMode);
+    dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    SetConsoleMode(hOut, dwMode);
+
+    // References:
+    //SetConsoleMode() and ENABLE_VIRTUAL_TERMINAL_PROCESSING?
+    //https://stackoverflow.com/questions/38772468/setconsolemode-and-enable-virtual-terminal-processing
+
+    // Windows console with ANSI colors handling
+    // https://superuser.com/questions/413073/windows-console-with-ansi-colors-handling
+
+
     char* default_argv[] = { "-" };
     int cc = -1, i, l = 0;
     wint_t c;
-    int colors    = isatty(STDOUT_FILENO);
+    int colors    = isatty(1);
     int force_locale = 1;
     int random = 0;
     double freq_h = 0.23, freq_v = 0.1;
 
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    double offx = (tv.tv_sec % 300) / 300.0;
+    SYSTEMTIME tv;
+    GetSystemTime(&tv);
+    double offx = (tv.wSecond % 300) / 300.0;
 
     for (i = 1; i < argc; i++) {
         char* endptr;
