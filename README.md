@@ -12,7 +12,7 @@ A windows port of the great [lolcat C implementation by jaseg!](https://github.c
 
 Get the latest release from the github repository ~~or try to run my bad make script (;~~
 
-***Keep in mind that it only works on newer builds of windows***
+***Keep in mind that it only works on newer builds of windows 10***
 
 ## Why?
 
